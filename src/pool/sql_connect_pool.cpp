@@ -40,7 +40,7 @@ void SqlConnectionPool::Init(const char* host, int port,
   sem_id_ = SemaphoreWrapper(max_connections_);  // 构造信号量，初值为最大连接数
 }
 
-// 从数据库连接队列中取出第一个，注意线程同步
+// 从数据库连接队列中取出第一个连接供使用，注意线程同步
 MYSQL* SqlConnectionPool::GetConnection() {
   MYSQL* conn = nullptr;
   if (sql_conn_que_.empty()) {
@@ -50,10 +50,33 @@ MYSQL* SqlConnectionPool::GetConnection() {
   sem_id_.Wait();  // 信号量-1
   {
     lock_guard<mutex> locker(mtx_);  // 独占访问
-    conn = sql_conn_que_.front();
+    conn = sql_conn_que_.front();  // 取出队头连接
     sql_conn_que_.pop();
   }
   return conn;
 }
 
-// 
+// 释放一个当前使用的连接，就是把它再塞到连接队列里去，所以信号量加了，可用的连接加了
+void SqlConnectionPool::FreeConnection(MYSQL* sql) {
+  assert(sql);  // 要释放的连接必须存在
+  lock_guard<mutex> locker(mtx_);
+  sql_conn_que_.emplace(sql);
+  sem_id_.Post();  // 信号量+1
+}
+
+// 获取空闲连接数量
+int SqlConnectionPool::GetNumFreeConn() {
+  lock_guard<mutex> locker(mtx_);
+  return sql_conn_que_.size();
+}
+
+// 关闭数据库连接池
+void SqlConnectionPool::CloseSqlConnPool() {
+  lock_guard<mutex> locker(mtx_);
+  while (!sql_conn_que_.empty()) {
+    auto conn = sql_conn_que_.front();
+    sql_conn_que_.pop();
+    mysql_close(conn);  // Closes a previously opened connection.
+  }
+  mysql_library_end();  // 终止mysql库
+}

@@ -19,8 +19,8 @@ class SqlConnectionPool {
  public:
   static SqlConnectionPool* Instance();  // 单例模式
 
-  MYSQL* GetConnection();
-  void FreeConnection(MYSQL* conn);
+  MYSQL* GetConnection();  // 取得一个连接
+  void FreeConnection(MYSQL* conn);  // 释放一个连接（释放==放入队列，并不是销毁）
   int GetNumFreeConn();
   
   void Init(const char* host, int port, const char* user,
@@ -32,8 +32,8 @@ class SqlConnectionPool {
   ~SqlConnectionPool();
 
   int max_connections_;              // 最大连接数
-  int num_users_;                    // 已使用连接数
-  int num_free_;                     // 空闲连接数
+  int num_users_;                    // 已使用连接数, not used
+  int num_free_;                     // 空闲连接数, not used
   std::queue<MYSQL*> sql_conn_que_;  // 连接池
   std::mutex mtx_;
   // sem_t sem_id_;                     // 信号量

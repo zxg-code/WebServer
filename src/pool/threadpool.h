@@ -32,6 +32,7 @@ class Threadpool {
           }
         }  // while
       };
+      // 创建线程
       std::thread(worker).detach();  // 将新线程和调用线程分离，调用之后不再是joinable状态了
     }
   }
@@ -48,7 +49,7 @@ class Threadpool {
     }
   }
 
-  template<class F>
+  template<typename F>  // TODO
   void AddTask(F& task) {
     {
       std::lock_guard<std::mutex> locker(pool_->mtx);
@@ -63,7 +64,7 @@ class Threadpool {
     std::condition_variable cond;
     bool is_closed;
     // function<return_type(args_type)>
-    std::queue<std::function<void()>> tasks;
+    std::queue<std::function<void()>> tasks;  // 请求队列
   };
   std::shared_ptr<Pool> pool_;
 };
