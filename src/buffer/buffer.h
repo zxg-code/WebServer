@@ -1,10 +1,10 @@
 #ifndef WEBSERVER_BUFFER_BUFFER_H_
 #define WEBSERVER_BUFFER_BUFFER_H_
-
+// C header
 #include <unistd.h>
 #include <sys/uio.h>
 #include <assert.h>
-
+// C++ header
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -16,28 +16,54 @@ class Buffer {
   Buffer() = delete;
   ~Buffer() = default;
 
-  size_t WriteableBytes() const;        // 可读字节数
-  size_t ReadableBytes() const;         // 可写字节数
-  // 预留的字节数
-  size_t PrependableBytes() const;      // 可预备字节数
+  // 可读字节数
+  inline size_t WriteableBytes() const {
+    return buffer_.size() - write_pos_;
+  }
 
-  // 数据的起始位置
-  const char* Peek() const;
+  // 可写字节数
+  inline size_t ReadableBytes() const {
+    return write_pos_ - read_pos_;  
+  }
+
+  // 预留的字节数，from 0 to read_pos_
+  inline size_t PrependableBytes() const {
+    return read_pos_;  // 并不是从0开始操作，而是从read_pos开始，留出[0, read_pos]这段空间
+  }
+
+  // 数据的起始地址 read address, equals begin address + read offset
+  inline const char* Peek() const {
+    return BeginPtr() + read_pos_;
+  }
+
+  // 移动写指针
+  inline void HasWritten(size_t len) {
+    write_pos_ += len;  // write offset
+  }
+
+  // 读取buffer内容后，移动读指针，回收空间？
+  inline void Retrieve(size_t len) {
+    assert(len <= ReadableBytes());
+    read_pos_ += len;  // read offset 
+  }
+
+  // const beginwrite
+  inline const char* BeginWrite() const {
+    return BeginPtr() + write_pos_; 
+  }
+  // 当前开始写的位置 write address = begin address + write offset
+  inline char* BeginWrite() {
+    return BeginPtr() + write_pos_;
+  }
+
   // 保证有长度为len的空间可写，如果长度不够，需要分配空间
   void EnsureWriteable(size_t len);
-  // 移动写指针
-  void HasWritten(size_t len);
-  // 读取buffer内容后，移动读指针，回收空间？
-  void Retrieve(size_t len);
   // 从起始位置移动读指针到某一位置
   void RetrieveUntil(const char* end);
   // 回收buffer
   void RetrieveAll() ;
   // 数据转为字符串，并回收buffer
   std::string RetrieveAllToStr();     
-  // 当前开始写的位置
-  const char* BeginWrite() const;
-  char* BeginWrite();
 
   // 向缓冲池中写入数据，移动写指针
   void Append(const std::string& str);
@@ -50,8 +76,8 @@ class Buffer {
 
  private:
   // 缓冲区初始位置的指针
-  char* BeginPtr();  
-  const char* BeginPtr() const;
+  inline char* BeginPtr();  
+  inline const char* BeginPtr() const;
   // resize buffer or use prependable area
   void MakeSpace(size_t len);
 

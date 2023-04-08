@@ -2,6 +2,7 @@
 #define SERVER_POOL_SQL_CONNECT_POOL_H_
 
 #include <semaphore.h>
+#include <assert.h>
 
 #include <string>
 #include <queue>
@@ -10,8 +11,7 @@
 
 #include <mysql/mysql.h>  
 
-#include <src/lock/locker.h>
-
+#include "../lock/locker.h"
 // #include  // log.h
 
 // 数据库连接池
@@ -38,6 +38,6 @@ class SqlConnectionPool {
   std::mutex mtx_;
   // sem_t sem_id_;                     // 信号量
   SemaphoreWrapper sem_id_;
-}
+};
 
 #endif  // SERVER_POOL_SQL_CONNECT_POOL_H_

@@ -3,18 +3,6 @@
 Buffer::Buffer(int buffer_size) 
     : buffer_(buffer_size), read_pos_(0), write_pos_(0) {}
 
-size_t Buffer::ReadableBytes() const {
-  return write_pos_ - read_pos_;  
-}
-
-size_t Buffer::WriteableBytes() const {
-  return buffer_.size() - write_pos_;
-}
-
-size_t Buffer::PrependableBytes() const {
-  return read_pos_;  // 并不是从0开始操作，而是从read_pos开始，留出[0, read_pos]这段空间
-}
-
 // begin address
 char* Buffer::BeginPtr() {
   return &*buffer_.begin();  // convert iterator to pointer
@@ -22,29 +10,6 @@ char* Buffer::BeginPtr() {
 // begin address
 const char* Buffer::BeginPtr() const {
   return &*buffer_.begin();
-}
-
-// read address = begin address + read offset
-const char* Buffer::Peek() const {
-  return BeginPtr() + read_pos_;   
-}
-
-// write address = begin address + write offset
-const char* Buffer::BeginWrite() const {
-  return BeginPtr() + write_pos_; 
-}
-// write address = begin address + write offset
-char* Buffer::BeginWrite() {
-  return BeginPtr() + write_pos_;
-}
-
-void Buffer::HasWritten(size_t len) {  // TODO: only use twice
-  write_pos_ += len;  // write offset
-}
-
-void Buffer::Retrieve(size_t len) {  // TODO: not use
-  assert(len <= ReadableBytes());
-  read_pos_ += len;  // read offset 
 }
 
 void Buffer::RetrieveUntil(const char* end) {
@@ -55,12 +20,12 @@ void Buffer::RetrieveUntil(const char* end) {
 
 void Buffer::RetrieveAll() {
   bzero(&buffer_[0], buffer_.size());
-  read_pos_ = 0;  // 读写指针归零
-  write_pos_ = 0;  // buffer was empty
+  read_pos_ = 0;  // 读写指针归零, buffer was empty
+  write_pos_ = 0;  
 }
 
 std::string Buffer::RetrieveAllToStr() {
-  std::string str(Peek(), ReadableBytes());  // to_string
+  std::string str(Peek(), ReadableBytes());  // 把可读的部分转换为字符串
   RetrieveAll();
   return str;
 }
@@ -81,8 +46,8 @@ void Buffer::MakeSpace(size_t len) {
     auto start = BeginPtr();
     // offset a block
     std::copy(start + read_pos_, start + write_pos_, start);  
-    read_pos_ = 0;  // prependable area was used
-    write_pos_ = readable;  // wirte_pos = read_pos + readable
+    read_pos_ = 0;                        // prependable area was used
+    write_pos_ = readable;                // wirte_pos = read_pos + readable
     assert(readable == ReadableBytes());  // validate
   }
 }
@@ -118,12 +83,9 @@ ssize_t Buffer::ReadFd(int fd, int* save_errno) {
   // read two buffers
   const ssize_t n = readv(fd, iov, 2);  // ret: num of bytes read or -1
   if (n < 0) {
-    *save_errno = errno;
-    return n;  // -1
-  }
-
-  if (static_cast<size_t>(n) <= writeable) {
-    write_pos_ += n;
+    *save_errno = errno;  // read failed
+  } else if (static_cast<size_t>(n) <= writeable) {
+    HasWritten(static_cast<size_t>(n));  // write_pos_ += n;
   } else {
     write_pos_ = buffer_.size();  // first buff is full
     Append(buff, n - writeable);  // resize first buff
@@ -138,6 +100,6 @@ ssize_t Buffer::WriteFd(int fd, int* save_errno) {
     *save_errno = errno;
     return n;  // -1
   }
-  read_pos_ += n;
+  Retrieve(static_cast<size_t>(n));  // read_pos_ += n;
   return n;
 }
