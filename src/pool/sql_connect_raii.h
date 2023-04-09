@@ -19,6 +19,8 @@ class SqlConnectionRaii {
     if (sql_) conn_pool_->FreeConnection(sql_);
   }
 
+  MYSQL* get_sql() { return sql_; }
+
  private:
   MYSQL* sql_;
   SqlConnectionPool* conn_pool_;

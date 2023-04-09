@@ -3,15 +3,6 @@
 Buffer::Buffer(int buffer_size) 
     : buffer_(buffer_size), read_pos_(0), write_pos_(0) {}
 
-// begin address
-char* Buffer::BeginPtr() {
-  return &*buffer_.begin();  // convert iterator to pointer
-}
-// begin address
-const char* Buffer::BeginPtr() const {
-  return &*buffer_.begin();
-}
-
 void Buffer::RetrieveUntil(const char* end) {
   auto start = Peek();
   assert(start <= end);

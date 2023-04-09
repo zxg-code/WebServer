@@ -49,7 +49,7 @@ class Buffer {
 
   // const beginwrite
   inline const char* BeginWrite() const {
-    return BeginPtr() + write_pos_; 
+    return static_cast<const char*>(BeginPtr() + write_pos_); 
   }
   // 当前开始写的位置 write address = begin address + write offset
   inline char* BeginWrite() {
@@ -75,9 +75,14 @@ class Buffer {
   ssize_t WriteFd(int fd, int* save_errno);  // 写接口
 
  private:
-  // 缓冲区初始位置的指针
-  inline char* BeginPtr();  
-  inline const char* BeginPtr() const;
+  // 缓冲区初始位置的指针, begin adderss
+  inline char* BeginPtr() {
+    return &*buffer_.begin();  // convert iterator to pointer
+  }
+  // begin adderss
+  inline const char* BeginPtr() const {
+    return static_cast<const char*>(&*buffer_.begin());
+  }
   // resize buffer or use prependable area
   void MakeSpace(size_t len);
 
