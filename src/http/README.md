@@ -6,6 +6,7 @@
 
 - 对原版的分析
     ```cpp```
+
     bool HttpRequest::UserVerify(const string &name, const string &pwd, bool isLogin) {
         if(name == "" || pwd == "") { return false; }
         LOG_INFO("Verify name:%s pwd:%s", name.c_str(), pwd.c_str());
@@ -72,6 +73,7 @@
         LOG_DEBUG( "UserVerify success!!");
         return flag;
     }
+    
     ```cpp```
 
 
