@@ -29,7 +29,7 @@ bool HttpRequest::Parse(Buffer* buff) {
                                   CRLF, CRLF+2);
     // 读取一行
     std::string line(buff->Peek(), line_end);  // read line, construct string
-    switch (state_) {  // TODO:
+    switch (state_) {
       case REQUEST_LINE:
         if (!ParseRequestLine(line)) { return false; }
         ParsePath();  // get html path
@@ -83,7 +83,7 @@ void HttpRequest::ParseRequestHeader(const string& line) {
   if (regex_match(line, match_group, pattern)) {
     header_[match_group[1]] = match_group[2];  // field = content
   } else {
-    state_ = REQUEST_CONTENT;  // next state
+    state_ = REQUEST_CONTENT;  // next state，请求体解析结束才进入下一个状态
   }
 }
 
@@ -132,6 +132,12 @@ void HttpRequest::ParseFormUrlEncoded() {
         break;
     }  // switch
   }  // for
+  assert(L <= R);
+  // 还有剩余，需要后处理
+  if (post_.count(key) == 0 && L < R) {
+    value = content_.substr(L, R-L);
+    post_[key] = value;
+  }
 }
 
 void HttpRequest::ParsePost() {
@@ -141,7 +147,7 @@ void HttpRequest::ParsePost() {
     auto [html, tag] = *it;  // [someone.html, tag]
     // TODO: log debug
     if (tag == 0 || tag == 1) {
-      bool is_login = (tag == 1);
+      bool is_login = (tag == 1);  // login or rigister
       if (UserVerify(post_["username"], post_["password"], is_login)) {
         path_ = "/welcome.html";
       } else {
@@ -160,13 +166,13 @@ bool HttpRequest::UserVerify(const string& name, const string& pwd,
   auto sql = sql_pool.get_sql();  // get a sql connection
   assert(sql);
   bool flag = false;              // 返回值
-  bool username_existed = false;  // 用户名已存在
-  unsigned int num_fields = 0;
-  char order[256] = {0};
+  bool username_existed = false;  // 用户名是否已存在
+  unsigned int num_fields = 0;    // 查询到的字段数
+  char order[256] = {0};          // SQL语句
   MYSQL_FIELD* fields = nullptr;  // mysql字段结构体
   MYSQL_RES* res = nullptr;       // result set结构体
 
-  // SQL语句，查询用户和密码
+  // SQL语句，查询用户和密码根据用户名
   snprintf(order, sizeof(order),
            "SELECT username, password FROM user WHERE username='%s' LIMIT 1",
            name.c_str());

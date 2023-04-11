@@ -19,7 +19,8 @@ class HttpRequest {
  public:
   HttpRequest();
   ~HttpRequest() = default;
-  
+
+  // 读缓冲池中的内容并解析
   bool Parse(Buffer* buff);
 
   inline bool IsKeepAlive() const {
@@ -67,7 +68,7 @@ class HttpRequest {
     REQUEST_FINISH,  // 请求结束
   };
 
-  // HTTP请求处理结果
+  // HTTP请求处理结果，没有用到
   enum HttpCode {
     NO_REQUEST,          // 请求不完整
     GET_REQUEST,         // 获得了完整的请求
@@ -113,6 +114,7 @@ class HttpRequest {
   std::unordered_map<std::string, std::string> post_;
   // 默认页面
   static const std::unordered_set<std::string> default_htmls;
+  // 不同页面对应的状态（登录/注册）
   static const std::unordered_map<std::string, int> default_html_tags;
 };
 

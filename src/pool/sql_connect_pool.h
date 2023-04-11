@@ -18,6 +18,8 @@
 class SqlConnectionPool {
  public:
   static SqlConnectionPool* Instance();  // 单例模式
+  SqlConnectionPool(const SqlConnectionPool&) = delete;
+  SqlConnectionPool& operator = (const SqlConnectionPool&) = delete;
 
   MYSQL* GetConnection();  // 取得一个连接
   void FreeConnection(MYSQL* conn);  // 释放一个连接（释放==放入队列，并不是销毁）
