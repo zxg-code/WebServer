@@ -25,7 +25,8 @@ bool HttpRequest::Parse(Buffer* buff) {
   if (buff->ReadableBytes() <= 0) { return false; }
   while (buff->ReadableBytes() > 0 && state_ != REQUEST_FINISH) {
     // 每行以\r\n作为结束字符，查找\r\n就能将报文按行拆解
-    const char* line_end = search(buff->Peek(), buff->BeginWrite(),
+    const char* line_end = search(buff->Peek(),
+                                  static_cast<const char*>(buff->BeginWrite()),
                                   CRLF, CRLF+2);
     // 读取一行
     std::string line(buff->Peek(), line_end);  // read line, construct string
@@ -144,7 +145,8 @@ void HttpRequest::ParsePost() {
   ParseFormUrlEncoded();
   auto it = default_html_tags.find(path_);  // iterator
   if (it != default_html_tags.end()) {
-    auto [html, tag] = *it;  // [someone.html, tag]
+    // auto [html, tag] = *it;  // [someone.html, tag]
+    auto tag = it->second;
     // TODO: log debug
     if (tag == 0 || tag == 1) {
       bool is_login = (tag == 1);  // login or rigister

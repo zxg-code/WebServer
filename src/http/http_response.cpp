@@ -79,7 +79,6 @@ void HttpResponse::ErrorHtml() {
 }
 
 void HttpResponse::AddStateLine(Buffer* buff) {
-  string status;
   // 状态码存在，查找返回；不存在，一律按400返回
   if (code_status_.count(code_) == 0) code_ = 400;  // 400 : bad_request
   auto status = code_status_.at(code_);
