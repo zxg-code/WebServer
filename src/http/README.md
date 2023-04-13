@@ -10,3 +10,13 @@
     - log功能
     - 在response实现中，有函数例如AddHeader，多次调用了缓冲池的写入函数，我认为应该组建好字符串之后一次性写入
     - response中，析构函数只调用了UnmapFile()，应该不需要这个函数，有析构函数去做
+
+#### http_response
+- Issues
+
+- TODO
+
+
+#### http_connect
+- Issues
+    - iov_cnt没有初始化

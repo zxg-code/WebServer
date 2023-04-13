@@ -1,5 +1,5 @@
-#ifndef WEBSERVER_HTTP_HTTP_CONNECT_H_
-#define WEBSERVER_HTTP_HTTP_CONNECT_H_
+#ifndef WEBSERVER_HTTP_HTTP_REQUEST_H_
+#define WEBSERVER_HTTP_HTTP_REQUEST_H_
 // C header
 #include <errno.h>
 #include <mysql/mysql.h>
@@ -20,6 +20,7 @@ class HttpRequest {
   HttpRequest();
   ~HttpRequest() = default;
 
+  void Init();
   // 读缓冲池中的内容并解析
   bool Parse(Buffer* buff);
 
@@ -31,7 +32,7 @@ class HttpRequest {
   }
 
   // 取值函数，获取path_的值
-  inline const std::string& get_path() const {
+  inline std::string get_path() const {
     return path_;
   }
   inline std::string& get_path() {
@@ -118,4 +119,4 @@ class HttpRequest {
   static const std::unordered_map<std::string, int> default_html_tags;
 };
 
-#endif  // WEBSERVER_HTTP_HTTP_CONNECT_H_
+#endif  // WEBSERVER_HTTP_HTTP_REQUEST_H_

@@ -43,12 +43,12 @@ HttpResponse::HttpResponse() : code_(-1), path_(""), src_dir_(""),
 
 HttpResponse::~HttpResponse() { UnmapFile(); }
 // 含参初始化函数
-void HttpResponse::Init(const string& src_dir, string* path, bool is_keep_alive, int code){
+void HttpResponse::Init(const string& src_dir, string& path, bool is_keep_alive, int code){
   assert(src_dir != "");
   if(mm_file_) { UnmapFile(); }
   code_ = code;
   is_keep_alive_ = is_keep_alive;
-  path_ = *path;
+  path_ = path;
   src_dir_ = src_dir;
   mm_file_ = nullptr; 
   mm_file_stat_ = { 0 };
@@ -107,8 +107,8 @@ void HttpResponse::AddContent(Buffer* buff) {
   int* mmRet = static_cast<int*>(mmap(0, mm_file_stat_.st_size, PROT_READ,
                                       MAP_PRIVATE, src_fd, 0));
   if (*mmRet == -1) {  // 映射文件失败
-      ErrorContent(buff, "File NotFound!");
-      return; 
+    ErrorContent(buff, "File NotFound!");
+    return; 
   }
   mm_file_ = (char*)mmRet;  // 映射的地址保存起来
   close(src_fd);

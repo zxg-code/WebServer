@@ -16,7 +16,7 @@ class HttpResponse {
   HttpResponse();
   ~HttpResponse();
 
-  void Init(const std::string& srcDir, std::string* path,
+  void Init(const std::string& srcDir, std::string& path,
             bool isKeepAlive = false, int code = -1);
   // 组建报文响应请求
   void MakeResponse(Buffer* buff);

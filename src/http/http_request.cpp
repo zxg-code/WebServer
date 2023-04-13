@@ -2,12 +2,14 @@
 
 using namespace std;
 
-HttpRequest::HttpRequest()
-    : method_(""), 
-      path_(""), 
-      version_(""), 
-      content_(""), 
-      state_(REQUEST_LINE) {
+HttpRequest::HttpRequest() { Init(); }
+
+void HttpRequest::Init() {
+  method_ = "";
+  path_ = "";
+  version_ = "";
+  content_ = "";
+  state_ = REQUEST_LINE;
   header_.clear();
   post_.clear();
 }
