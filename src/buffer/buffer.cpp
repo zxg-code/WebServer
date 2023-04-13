@@ -64,7 +64,7 @@ void Buffer::Append(const Buffer& buff) {
 } 
 
 ssize_t Buffer::ReadFd(int fd, int* save_errno) {
-  char buff[65535];
+  char buff[65535];     // 临时的一个栈空间，暂时存储溢出的内容
   struct iovec iov[2];  // two buffers
   const size_t writeable = WriteableBytes();
   iov[0].iov_base = BeginWrite();  // first buff
@@ -79,7 +79,7 @@ ssize_t Buffer::ReadFd(int fd, int* save_errno) {
     HasWritten(static_cast<size_t>(n));  // write_pos_ += n;
   } else {
     write_pos_ = buffer_.size();  // first buff is full
-    Append(buff, n - writeable);  // resize first buff
+    Append(buff, n - writeable);  // resize first buff，追加，迫使缓冲池扩容
   }
   return n;
 }
