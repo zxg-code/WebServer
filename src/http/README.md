@@ -15,14 +15,14 @@
 #### http_response
 - Issues
     - 根据code判断status的逻辑精简了一下
-    - 
+    - mm_file_stat的命名有些不贴切，它实际表示意义在MakeResponse函数中可以看出，
 
 - TODO
 
 
 #### http_connect
 - Issues
-    - 
+    - 静态成员变量在何时初始化
 
 - TODO
     - 
