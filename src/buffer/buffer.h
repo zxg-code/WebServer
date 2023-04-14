@@ -41,7 +41,7 @@ class Buffer {
     write_pos_ += len;  // write offset
   }
 
-  // 读取buffer内容后，移动读指针，回收空间？
+  // 读取buffer内容后，移动读指针，回收空间
   inline void Retrieve(size_t len) {
     assert(len <= ReadableBytes());
     read_pos_ += len;  // read offset 

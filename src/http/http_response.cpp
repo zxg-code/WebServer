@@ -102,8 +102,11 @@ void HttpResponse::AddContent(Buffer* buff) {
     ErrorContent(buff, "File NotFound!");
     return; 
   }
-  // 将文件映射到内存提高文件的访问速度 MAP_PRIVATE 建立一个写入时拷贝的私有映射
   // TODO: LOG_DEBUG("file path %s", (srcDir_ + path_).data());
+  // 将文件映射到内存提高文件的访问速度 MAP_PRIVATE 建立一个写入时拷贝的私有映射
+  // mmap在进程的地址空间和流文件之间建立映射关系
+  // params: addr, len, protection, flags, fd, offset
+  // 从返回地址开始，长度为len的地址空间被映射到一个流文件，该文件从off开始，长度为len字节
   int* mmRet = static_cast<int*>(mmap(0, mm_file_stat_.st_size, PROT_READ,
                                       MAP_PRIVATE, src_fd, 0));
   if (*mmRet == -1) {  // 映射文件失败
@@ -118,10 +121,9 @@ void HttpResponse::AddContent(Buffer* buff) {
 
 void HttpResponse::UnmapFile() {
   if (mm_file_) {
-    munmap(mm_file_, mm_file_stat_.st_size);
-    // mm_file_ = nullptr;
+    munmap(mm_file_, mm_file_stat_.st_size);  // 结束映射
+    mm_file_ = nullptr;
   }
-  delete mm_file_;
 }
 
 string HttpResponse::GetFileType() {

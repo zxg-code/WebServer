@@ -4,7 +4,8 @@
     - request中，ParstPost函数中将最外层的if移动到了它的调用者：ParseBody()中，后续使用时需要注意先判断一下
     - 原作者的代码的很多函数中，对哈希表查找了两次，一次count，一次find，第一次count找到之后就可以利用at取值了吧
     - request中的Parse函数，search无法重载到BeginWrite的const形式，不知道原因
-    - response中，UnmapFile()函数修改为：使用delete释放内存
+    - 修改了ConverHex函数
+    - get_path的const重载似乎并无必要，成员变量不是指针，返回的也不是指针或引用
 
 - TODO
     - log功能
@@ -13,10 +14,15 @@
 
 #### http_response
 - Issues
+    - 根据code判断status的逻辑精简了一下
+    - 
 
 - TODO
 
 
 #### http_connect
 - Issues
-    - iov_cnt没有初始化
+    - 
+
+- TODO
+    - 

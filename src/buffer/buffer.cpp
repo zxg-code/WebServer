@@ -11,7 +11,7 @@ void Buffer::RetrieveUntil(const char* end) {
 
 void Buffer::RetrieveAll() {
   bzero(&buffer_[0], buffer_.size());
-  read_pos_ = 0;  // 读写指针归零, buffer was empty
+  read_pos_ = 0;  // 读写指针偏移量归零, buffer was empty
   write_pos_ = 0;  
 }
 

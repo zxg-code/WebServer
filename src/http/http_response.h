@@ -24,7 +24,7 @@ class HttpResponse {
   void UnmapFile();
   // 构建错误提示消息，写入缓冲池
   void ErrorContent(Buffer* buff, std::string message);
-
+  // 获取文件的长度，用于mmap
   inline size_t FileLen() const { return mm_file_stat_.st_size; }
   // 取值函数，获取code_
   inline int get_code() const { return code_; }
@@ -48,7 +48,7 @@ class HttpResponse {
   std::string path_;     // 响应文件路径
   std::string src_dir_;  // 文件目录
   char* mm_file_;             // mmap映射文件所在地址
-  struct stat mm_file_stat_;  // 文件状态信息
+  struct stat mm_file_stat_;  // 路径为 src_dir_+path_ 的文件的状态信息
   // 不同文件后缀对应的返回类型
   static const std::unordered_map<std::string, std::string> suffix_type_;
   // http响应编码对应的解释
