@@ -1,4 +1,6 @@
-// 线程池
+// Thread pool
+// by zxg
+//
 #ifndef SERVER_POOL_THREADPOOL_H_
 #define SERVER_POOL_THREADPOOL_H_
 
@@ -8,10 +10,9 @@
 #include <thread>
 #include <functional>
 
-template <typename T>
 class Threadpool {
  public:
-  Threadpool(size_t num_threads=8) {
+  explicit Threadpool(size_t num_threads=8) : pool_(std::make_shared<Pool>()) {
     assert(num_threads > 0);
     for (size_t i = 0; i < num_threads; ++i) {
       // 线程处理函数
@@ -25,7 +26,7 @@ class Threadpool {
             locker.unlock();
             task();  // 执行请求
             // locker.lock();
-          } else if (pool->is_closed) {  // why?
+          } else if (pool->is_closed) {  // 线程池要关闭了
             break;
           } else {
             pool->cond.wait(locker);  // 如果队列为空，在这里等待
@@ -45,25 +46,29 @@ class Threadpool {
         std::lock_guard<std::mutex> locker(pool_->mtx);
         pool_->is_closed = true;
       }
-      pool_->cond.notify_all();  // 唤醒所有等待的线程
+      // 唤醒所有等待的线程
+      // 执行完所有任务后才会退出
+      pool_->cond.notify_all();
     }
   }
 
   template<typename F>  // TODO
-  void AddTask(F& task) {
+  void AddTask(F&& task) {
     {
       std::lock_guard<std::mutex> locker(pool_->mtx);
-      pool_->tasks.emplace(task);
+      // 完美转发？
+      pool_->tasks.emplace(std::forward<F>(task));
     }
     pool_->cond.notify_one();  // 唤醒一个等待的进程
   }
 
  private:
+  // 保存线程池相关参数的结构体
   struct Pool {
     std::mutex mtx;
     std::condition_variable cond;
-    bool is_closed;
-    // function<return_type(args_type)>
+    bool is_closed;  // 是否结束线程池
+    // using: function<return_type(args_type)>
     std::queue<std::function<void()>> tasks;  // 请求队列
   };
   std::shared_ptr<Pool> pool_;
