@@ -22,7 +22,7 @@
 
 #### http_connect
 - Issues
-    - 静态成员变量在何时初始化
+    - 静态成员变量在何时初始化：在webserver.cpp文件中
 
 - TODO
     - 

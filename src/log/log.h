@@ -70,7 +70,7 @@ class Log {
 #define LOG_BASE(level, format, ...) \
   do {\
     Log* log = Log::Instance();\
-    if (log->IsOpen() && log->GetLevel() <= level) {\
+    if (log->IsOpen() && log->get_level() <= level) {\
       log->Write(level, format, ##__VA_ARGS__); \
       log->Flush();\
     }\
