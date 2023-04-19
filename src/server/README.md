@@ -29,6 +29,7 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 #### webserver
 - Issues
     - 为什么需要两个事件：listen_event_ 和 conn_event_
+    - 为什么SendError函数要关闭连接，关闭连接为什么不调用自己写的CloseConnect
 
 - TODO
     - 使用make_unique

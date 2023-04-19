@@ -76,4 +76,80 @@ void WebServer::InitEventMode(int trig_mode) {
   // 初始化http连接类的静态变量
   HttpConnect::is_ET = (conn_event_ & EPOLLET);
 }
-    
+
+bool WebServer::InitSocket() {
+  int ret;
+  struct sockaddr_in addr;
+  // 端口检查
+  if (port_ > 65535 || port_ < 1024) {
+    LOG_ERROR("Port:%d error!",  port_);
+    return false;
+  }
+  // 设置监听地址、端口等
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);  // host byte order to network long
+  addr.sin_port = htons(port_);
+  // socket option: SO_LINGER
+  struct linger optLinger = { 0 };  // off is default setting
+  if (open_linger_) {
+    // 设置linger,
+    optLinger.l_onoff = 1;   // option is disabled if the value is 0
+    optLinger.l_linger = 1;  // linger time on close (units: seconds)
+  }
+  // create server socket and set option
+  listen_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+  if (listen_fd_ < 0) {
+    LOG_ERROR("Create socket error!", port_);
+    return false;
+  }
+  ret = setsockopt(listen_fd_, SOL_SOCKET, SO_LINGER, &optLinger, 
+                   sizeof(optLinger));
+  if (ret < 0) {
+    close(listen_fd_);
+    LOG_ERROR("Init linger error!", port_);
+    return false;
+  }
+  // 开启端口复用选项
+  int reuse = 1;
+  ret = setsockopt(listen_fd_, SOL_SOCKET, SO_REUSEADDR, (const void*)&reuse,
+                   sizeof(int));
+  if (ret == -1) {
+    LOG_ERROR("set socket setsockopt error !");
+    close(listen_fd_);
+    return false;
+  }
+  // 绑定
+  ret = bind(listen_fd_, (struct sockaddr *)&addr, sizeof(addr));
+  if (ret < 0) {
+    LOG_ERROR("Bind Port:%d error!", port_);
+    close(listen_fd_);
+    return false;
+  }
+  // 监听，设定队列长度
+  ret = listen(listen_fd_, 6);
+  if (ret < 0) {
+    LOG_ERROR("Listen port:%d error!", port_);
+    close(listen_fd_);
+    return false;
+  }
+  // 加入监听事件描述符集
+  ret = epoller_->AddFd(listen_fd_,  listen_event_ | EPOLLIN);
+  if (ret == 0) {
+    LOG_ERROR("Add listen error!");
+    close(listen_fd_);
+    return false;
+  }
+  // 设置监听事件为非阻塞
+  SetFdNonblock(listen_fd_);
+  LOG_INFO("Server port:%d", port_);
+  return true;
+}
+
+int WebServer::SetFdNonblock(int fd) {
+  assert(fd > 0);
+  // fcntl params: fd, cmd, args
+  // F_GETFD: get fd flags
+  // F_SETFL: set the file status flags
+  return fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
+}

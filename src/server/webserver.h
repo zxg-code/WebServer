@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 
 #include <unordered_map>
+#include <cstring>
 
 #include "../pool/threadpool.h"
 #include "../pool/sql_connect_raii.h"
@@ -33,6 +34,7 @@ class WebServer {
   void Start();
 
  private:
+  // 创建服务端监听套接字
   bool InitSocket();
   // 初始化事件工作模式
   void InitEventMode(int trig_mode);
@@ -41,21 +43,22 @@ class WebServer {
   void DealListen();
   void DealWrite(HttpConnect* client);
   void DealRead(HttpConnect* client);
-
+  // 向客户端发送给错误消息并关闭连接
   void SendError(int fd, const char* info);
   void ExtentTime(HttpConnect* client);
+  // 删除epoll监听事件，关闭连接
   void CloseConnect(HttpConnect* client);
 
   void OnRead(HttpConnect* client);
   void OnWrite(HttpConnect* client);
   void OnProcess(HttpConnect* client);
-
+  // 将描述符fd设为非阻塞状态
   static int SetFdNonblock(int fd);
 
   static const int MAX_FD_ = 65536;  // 最大文件描述符数量
 
   int port_;          // 服务器端口
-  bool open_linger_;  //
+  bool open_linger_;  // socket选项SO_LINGER是否开启，用来处理在close()时残留的数据，丢弃或继续发送
   int timeout_;       // 毫秒MS
   bool is_close_;     // 初始化套接字是否成功
   int listen_fd_;     // 监听的文件描述符
