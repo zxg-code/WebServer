@@ -153,3 +153,17 @@ int WebServer::SetFdNonblock(int fd) {
   // F_SETFL: set the file status flags
   return fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
 }
+
+void WebServer::SendError(int fd, const char*info) {
+  assert(fd > 0);
+  int ret = send(fd, info, strlen(info), 0);
+  if (ret < 0) LOG_WARN("send error to client[%d] error!", fd);
+  close(fd);  // 为什么不调用CloseConnect
+}
+
+void WebServer::CloseConnect(HttpConnect* client) {
+  assert(client);
+  LOG_INFO("Client[%d] quit!", client->get_fd());
+  epoller_->DelFd(client->get_fd());
+  client->Close();
+}
