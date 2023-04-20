@@ -51,7 +51,7 @@ WebServer::~WebServer() {
 }
 
 void WebServer::InitEventMode(int trig_mode) {
-  listen_event_ = EPOLLRDHUP;  // 初始化epoll事件为：“连接关闭”
+  listen_event_ = EPOLLRDHUP;  // 初始化epoll事件为：对端关闭连接
   // EPOLLONESHOT: 只处理一次，然后从事件表中删除
   conn_event_ = EPOLLONESHOT | EPOLLRDHUP;  // 初始化epoll事件
   // 设置epoll模式，设为ET(边沿触发)
@@ -166,4 +166,127 @@ void WebServer::CloseConnect(HttpConnect* client) {
   LOG_INFO("Client[%d] quit!", client->get_fd());
   epoller_->DelFd(client->get_fd());
   client->Close();
+}
+
+void WebServer::Start() {
+  int time_ms = -1;  // epoll wait timeout == -1 无事件将阻塞
+  if (!is_close_) LOG_INFO("========== Server start ==========");
+  // 启动服务
+  while (!is_close_) {
+    // 如果设置了超时时间，需要处理超时事件
+    if (timeout_ > 0) time_ms = timer_->GetNextTick();
+    int num_events = epoller_->Wait(time_ms);  // 就绪事件数
+    // 处理事件
+    for (int i = 0; i < num_events; i++) {
+      int fd = epoller_->GetEventFd(i);
+      uint32_t events = epoller_->GetEvents(i);
+      // 分情况处理
+      if (fd == listen_fd_) {
+        DealConnect();
+      } else if (events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {  // 关闭或挂起
+        assert(users_.count(fd) > 0);
+        CloseConnect(&users_[fd]);
+      } else if (events & EPOLLIN) {   // 读事件
+        assert(users_.count(fd) > 0);
+        DealRead(&users_[fd]);
+      } else if (events & EPOLLOUT) {  // 写事件
+        assert(users_.count(fd) > 0);
+        DealWrite(&users_[fd]);
+      } else LOG_ERROR("Unexpected event");  // 错误
+    }  // for
+  }  // while
+}
+
+void WebServer::AddClient(int conn_fd, sockaddr_in cli_addr) {
+  assert(conn_fd > 0);
+  users_[conn_fd].Init(conn_fd, cli_addr);  // 创建并初始化一个httpconnect对象
+  // 需要增加一个定时器，超时则触发关闭连接函数
+  if (timeout_ > 0) {
+    timer_->AddTimer(conn_fd, timeout_, std::bind(&WebServer::CloseConnect,
+                                                  this, &users_[conn_fd]));
+  }
+  // 添加epoll监听事件
+  epoller_->AddFd(conn_fd, EPOLLIN | conn_event_);
+  SetFdNonblock(conn_fd);  // 连接设为非阻塞
+  LOG_INFO("Client[%d] in!", users_[conn_fd].get_fd());
+}
+
+void WebServer::DealConnect() {
+  struct sockaddr_in cli_addr;
+  socklen_t cli_len = sizeof(cli_addr);
+  do {
+    int fd = accept(listen_fd_, (struct sockaddr *)&cli_addr, &cli_len);
+    if (fd < 0) return;  // or <= ?
+    else if (HttpConnect::user_count >= MAX_FD_) {  // too many clients
+      SendError(fd, "Server busy!");
+      LOG_WARN("Clients is full!");
+      return;
+    }
+    AddClient(fd, cli_addr);  // add timer or epoll events
+  } while (listen_event_ & EPOLLET);
+}
+
+void WebServer::DealRead(HttpConnect* client) {
+  assert(client);
+  ExtentTime(client);  // 调整连接的过期时间
+  // 向线程池任务队列中增加一个读任务
+  threadpool_->AddTask(std::bind(&WebServer::OnRead, this, client));
+}
+
+void WebServer::DealWrite(HttpConnect* client) {
+  assert(client);
+  ExtentTime(client);
+  // 向线程池任务队列中增加一个写任务
+  threadpool_->AddTask(std::bind(&WebServer::OnWrite, this, client));
+}
+
+void WebServer::ExtentTime(HttpConnect* client) {
+  assert(client);
+  if (timeout_ > 0) timer_->Adjust(client->get_fd(), timeout_);
+}
+
+void WebServer::OnRead(HttpConnect* client) {
+  assert(client);
+  int len = -1;  // 读取的长度，字节数
+  int readErrno = 0;
+  len = client->Read(&readErrno);
+  if (len <= 0 && readErrno != EAGAIN) {
+    CloseConnect(client);  // 发生错误
+    return;
+  }
+  OnProcess(client);
+}
+
+void WebServer::OnProcess(HttpConnect* client) {
+  if (client->Process()) {  // 没有可读数据会返回false
+    // 如果请求解析成功则将对应的epoll事件改为写事件
+    epoller_->ModFd(client->get_fd(), conn_event_ | EPOLLOUT);
+  } else {
+    // 否则相反
+    epoller_->ModFd(client->get_fd(), conn_event_ | EPOLLIN);
+  }
+}
+
+void WebServer::OnWrite(HttpConnect* client) {
+  assert(client);
+  int len = -1;  // 写入的长度，字节数
+  int writeErrno = 0;
+  len = client->Write(&writeErrno);
+  // 如果没有数据需要写了
+  if (client->ToWriteBytes() == 0) {
+    // 传输完成,如果客户端设置了长连接，那么调用OnProcess函数，因为此时的client->process()
+    // 会返回false，所以该连接会重新注册epoll的EPOLLIN事件
+    if (client->IsKeepAlive()) {
+      OnProcess(client);
+      return;
+    }
+  } else if (len < 0) {
+    // 若返回值小于0，且信号为EAGAIN说明数据还没有发送完
+    // 重新在EPOLL上注册该连接的EPOLLOUT事件*/
+    if (writeErrno == EAGAIN) {
+      epoller_->ModFd(client->get_fd(), conn_event_ | EPOLLOUT);
+      return;
+    }
+  }
+  CloseConnect(client);  // 否则关闭连接
 }

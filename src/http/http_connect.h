@@ -25,14 +25,16 @@ public:
   ssize_t Write(int* save_errno);
   // 关闭连接，取消文件映射，释放资源
   void Close();
+  // 解析http请求数据
   bool Process();
 
-  int ToWriteBytes() { 
-      return iov_[0].iov_len + iov_[1].iov_len; 
+  // 还需要写多少字节的数据
+  inline int ToWriteBytes() { 
+    return iov_[0].iov_len + iov_[1].iov_len; 
   }
   // 是否为长连接
-  bool IsKeepAlive() const {
-      return request_.IsKeepAlive();
+  inline bool IsKeepAlive() const {
+    return request_.IsKeepAlive();
   }
   // 获取socket对应的ip地址
   inline const char* GetIP() const { return inet_ntoa(addr_.sin_addr); }
