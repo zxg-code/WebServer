@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include "../buffer/buffer.h"
-// TODO: LOG.H
+#include "../log/log.h"
 
 class HttpResponse {
  public:

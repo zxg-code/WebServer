@@ -7,6 +7,7 @@
 #include <stdlib.h>      // atoi()
 #include <errno.h>
 
+#include "../log/log.h"
 #include "../pool/sql_connect_raii.h"
 #include "../buffer/buffer.h"
 #include "http_response.h"

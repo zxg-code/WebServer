@@ -25,14 +25,14 @@ void SqlConnectionPool::Init(const char* host, int port,
     MYSQL* sql = nullptr;
     sql = mysql_init(sql);  // 初始化一个MYSQL对象，失败则返回NULL
     if (!sql) {
-      // TODO: log error
+      LOG_ERROR("MySql init error!");
       assert(sql);
     }
     // 建立连接
     // ret: MYSQL* handler if success else NULL
     sql = mysql_real_connect(sql, host, user, pwd, db_name, port, nullptr, 0);
     if (!sql) {
-      // TODO: log error
+      LOG_ERROR("MySql Connect error!");
     }
     sql_conn_que_.emplace(sql);  // 加入连接队列
   } // for
@@ -44,7 +44,7 @@ void SqlConnectionPool::Init(const char* host, int port,
 MYSQL* SqlConnectionPool::GetConnection() {
   MYSQL* conn = nullptr;
   if (sql_conn_que_.empty()) {
-    // TODO: log warnning of "sqlconnpool busy"
+    LOG_WARN("SqlConnPool busy!");
     return nullptr;
   }
   sem_id_.Wait();  // 信号量-1

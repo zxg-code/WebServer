@@ -12,7 +12,7 @@
 #include <functional> 
 #include <chrono>  // cpp time library
 
-// TODO: #include "../log/log.h"
+#include "../log/log.h"
 
 using TimeoutCallBack = std::function<void()>;  // 
 using Clock = std::chrono::high_resolution_clock;  

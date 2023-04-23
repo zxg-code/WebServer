@@ -12,7 +12,7 @@
 #include <mysql/mysql.h>  
 
 #include "../lock/locker.h"
-// #include  // log.h
+#include "../log/log.h"
 
 // 数据库连接池
 class SqlConnectionPool {

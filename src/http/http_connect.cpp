@@ -23,8 +23,8 @@ void HttpConnect::Init(int fd, const sockaddr_in& addr) {
   write_buff_->RetrieveAll();
   read_buff_->RetrieveAll();
   is_close_ = false;
-  // TODO: LOG_INFO("Client[%d](%s:%d) in, userCount:%d", fd_, GetIP(), 
-  //                GetPort(), (int)userCount);
+  LOG_INFO("Client[%d](%s:%d) in, userCount:%d", fd_, GetIP(), 
+           GetPort(), (int)user_count);
 }
 
 void HttpConnect::Close() {
@@ -33,8 +33,8 @@ void HttpConnect::Close() {
     is_close_ = true; 
     user_count--;
     close(fd_);  // 
-    // TODO: LOG_INFO("Client[%d](%s:%d) quit, UserCount:%d", fd_, GetIP(),
-    //                GetPort(), (int)userCount);
+    LOG_INFO("Client[%d](%s:%d) quit, UserCount:%d", fd_, GetIP(),
+             GetPort(), (int)user_count);
   }
 }
 
@@ -42,7 +42,7 @@ bool HttpConnect::Process() {
     request_.Init();
     if (read_buff_->ReadableBytes() <= 0) return false;  // 是否存在可读数据
     else if (request_.Parse(read_buff_)) {
-      // TODO: LOG_DEBUG("%s", request_.path().c_str());
+      LOG_DEBUG("%s", request_.get_path().c_str());
       response_.Init(src_dir, request_.get_path(), request_.IsKeepAlive(), 200);
     } else {
       response_.Init(src_dir, request_.get_path(), false, 400);
@@ -60,7 +60,7 @@ bool HttpConnect::Process() {
       iov_[1].iov_len = response_.FileLen();
       iov_cnt_ = 2;
     }
-    // TODO: LOG_DEBUG("filesize:%d, %d  to %d", response_.FileLen() , iov_cnt_, ToWriteBytes());
+    LOG_DEBUG("filesize:%d, %d  to %d", response_.FileLen() , iov_cnt_, ToWriteBytes());
     return true;
 }
 

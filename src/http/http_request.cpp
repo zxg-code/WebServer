@@ -50,7 +50,8 @@ bool HttpRequest::Parse(Buffer* buff) {
     if (line_end == buff->BeginWrite()) { break; }  // 不用移动读指针吗？
     buff->RetrieveUntil(line_end + 2);  // 移动读指针，同时跳过CRLF
   }  // while
-  // TODO: log debug
+  LOG_DEBUG("[%s], [%s], [%s]", method_.c_str(), path_.c_str(),
+            version_.c_str());
   return true;
 }
 
@@ -64,7 +65,7 @@ bool HttpRequest::ParseRequestLine(const string& line) {
     state_ = REQUEST_HEADER;    // next state
     return true;
   }
-  // TODO: log error
+  LOG_ERROR("RequestLine Error");
   return false;
 }
 
@@ -97,7 +98,7 @@ void HttpRequest::ParseRequestContent(const string& line) {
     ParsePost();
   }
   state_ = REQUEST_FINISH;
-  // TODO: log debug
+  LOG_DEBUG("Body:%s, len:%d", line.c_str(), line.size());
 }
 
 void HttpRequest::ParseFormUrlEncoded() {
@@ -129,7 +130,7 @@ void HttpRequest::ParseFormUrlEncoded() {
         value = content_.substr(L, R-L);
         L = R + 1;
         post_[key] = value;
-        // TODO: log debug
+        LOG_DEBUG("%s = %s", key.c_str(), value.c_str());
         break;
       default:
         break;
@@ -149,7 +150,7 @@ void HttpRequest::ParsePost() {
   if (it != default_html_tags.end()) {
     // auto [html, tag] = *it;  // [someone.html, tag]
     auto tag = it->second;
-    // TODO: log debug
+    LOG_DEBUG("Tag:%d", tag);
     if (tag == 0 || tag == 1) {
       bool is_login = (tag == 1);  // login or rigister
       if (UserVerify(post_["username"], post_["password"], is_login)) {
@@ -165,7 +166,7 @@ void HttpRequest::ParsePost() {
 bool HttpRequest::UserVerify(const string& name, const string& pwd, 
                              bool is_login) {
   if (name == "" || pwd == "") { return false; }
-  // TODO: log info
+  LOG_INFO("Verify name:%s pwd:%s", name.c_str(), pwd.c_str());
   SqlConnectionRaii sql_pool(SqlConnectionPool::Instance());  // construt sql pool
   auto sql = sql_pool.get_sql();  // get a sql connection
   assert(sql);
@@ -180,7 +181,7 @@ bool HttpRequest::UserVerify(const string& name, const string& pwd,
   snprintf(order, sizeof(order),
            "SELECT username, password FROM user WHERE username='%s' LIMIT 1",
            name.c_str());
-  // TODO: log debug
+  LOG_DEBUG("%s", order);
   if (mysql_query(sql, order) != 0) {  // 0 for success, nonzero if error
     mysql_free_result(res);  // 释放结果集的内存
     return false;
@@ -190,31 +191,36 @@ bool HttpRequest::UserVerify(const string& name, const string& pwd,
   fields = mysql_fetch_fields(res);    // 获取结果集的字段
 
   while(MYSQL_ROW row = mysql_fetch_row(res)) {
-    // TODO: LOG_DEBUG("MYSQL ROW: %s %s", row[0], row[1]);
+    LOG_DEBUG("MYSQL ROW: %s %s", row[0], row[1]);
     string password(row[1]);
     // 登录
     if (is_login) {  // 登录行为
         if (pwd == password) { flag = true; }  // 验证密码
-        // else: TODO: LOG_DEBUG("pwd error!");
+        else {
+          flag = false;
+          LOG_DEBUG("pwd error!");
+        }
     } else {  // 用户不是登录行为，却查询到了用户名和密码，说明用户名被占用
       username_existed = true;  // 用户名已经存在
+      flag = false;
+      LOG_DEBUG("user used!");
     }
   }
 
   // 如果是注册行为且用户名未被占用
   if (!is_login && !username_existed) {
-    // TODO: LOG_DEBUG("regirster!");
+    LOG_DEBUG("regirster!");
     bzero(order, 256);
     // 插入命令
     snprintf(order, 256,
               "INSERT INTO user(username, password) VALUES('%s','%s')",
               name.c_str(), pwd.c_str());
-    // TODO: LOG_DEBUG( "%s", order);
+    LOG_DEBUG( "%s", order);
     if(mysql_query(sql, order) == 0) {  // 插入一条记录，命令执行成功
         flag = true;
     }
   }
-  // TODO: LOG_DEBUG( "UserVerify success!!");
+  LOG_DEBUG( "UserVerify success!!");
   mysql_free_result(res);  // 释放内存
   return flag;
 }

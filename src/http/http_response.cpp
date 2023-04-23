@@ -102,7 +102,7 @@ void HttpResponse::AddContent(Buffer* buff) {
     ErrorContent(buff, "File NotFound!");
     return; 
   }
-  // TODO: LOG_DEBUG("file path %s", (srcDir_ + path_).data());
+  LOG_DEBUG("file path %s", (src_dir_ + path_).data());
   // 将文件映射到内存提高文件的访问速度 MAP_PRIVATE 建立一个写入时拷贝的私有映射
   // mmap在进程的地址空间和流文件之间建立映射关系
   // params: addr, len, protection, flags, fd, offset

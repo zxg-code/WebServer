@@ -10,7 +10,7 @@
 #include <regex>
 #include <algorithm>
 // Other header
-// TODO: placeholder for log.h
+#include "../log/log.h"
 #include "../pool/sql_connect_raii.h"
 #include "../pool/sql_connect_pool.h"
 #include "../buffer/buffer.h"
