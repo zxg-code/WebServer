@@ -2,6 +2,11 @@
 //
 #include "epoller.h"
 
+Epoller::Epoller()
+    : epoll_fd_(epoll_create(512)), events_(1024) {
+  assert(epoll_fd_ >= 0);
+}
+
 Epoller::Epoller(int max_event)
     : epoll_fd_(epoll_create(512)), events_(max_event) {
   assert(epoll_fd_ >= 0 && events_.size() > 0);
@@ -37,16 +42,17 @@ bool Epoller::DelFd(int fd) {
 }
 
 int Epoller::Wait(int timeout) {
-  return epoll_wait(epoll_fd_, events_[0], 
+  // epoll_wait需要接受一个数组保存事件
+  return epoll_wait(epoll_fd_, &(*events_.begin()), 
                     static_cast<int>(events_.size()), timeout);
 }
 
 int Epoller::GetEventFd(size_t i) const {
   assert(i < events_.size() && i >= 0);
-  return events_[i]->data.fd;
+  return events_[i].data.fd;
 }
 
 uint32_t Epoller::GetEvents(size_t i) const {
   assert(i < events_.size() && i >= 0);
-  return events_[i]->events;
+  return events_[i].events;
 }

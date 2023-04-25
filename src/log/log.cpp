@@ -35,11 +35,7 @@ void Log::Init(int level, const char* path, const char* suffix,
   if (max_capacity > 0) {
     is_async_ = true;
     if (!deque_) {
-      // unique_ptr<BlockDeque<std::string>> newDeque(new BlockDeque<std::string>);
-      // deque_ = move(newDeque);
       deque_ = make_unique<BlockDeque<string>>(); 
-      // std::unique_ptr<std::thread> NewThread(new thread(FlushLogThread));
-      // writeThread_ = move(NewThread);
       write_thread_ = make_unique<thread>(FlushLogThread);
     }
   } else is_async_ = false;

@@ -13,7 +13,7 @@
 class Buffer {
  public:
   Buffer(int buffer_size);
-  Buffer() : buffer_(1024), read_pos_(0), write_pos_(0) {}  // 默认构造函数
+  Buffer();  // default buffer_size: 1024
   ~Buffer() = default;
 
   // 可读字节数

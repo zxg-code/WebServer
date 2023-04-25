@@ -14,10 +14,10 @@
 
 #include "../log/log.h"
 
-using TimeoutCallBack = std::function<void()>;  // 
-using Clock = std::chrono::high_resolution_clock;  
-using MS = std::chrono::microseconds;  // 时间段
-using TimeStamp = Clock::time_point;   // 时间点
+typedef std::function<void()> TimeoutCallBack;
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::milliseconds MS;
+typedef Clock::time_point TimeStamp;
 
 // 堆节点，以超时时间为依据
 struct TimerNode {

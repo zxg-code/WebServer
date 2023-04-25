@@ -22,7 +22,7 @@ class Log {
   void Init(int level, const char* path = "./log", const char* suffix =".log",
             int max_capacity = 1024);
 
-  inline static Log* Instance() {
+  static Log* Instance() {
     static Log inst;
     return &inst;
   }

@@ -1,7 +1,13 @@
 #include "buffer.h"
 
 Buffer::Buffer(int buffer_size) 
-    : buffer_(buffer_size), read_pos_(0), write_pos_(0) {}
+    : buffer_(buffer_size), read_pos_(0), write_pos_(0) {
+  bzero(&(*buffer_.begin()), buffer_.size());
+}
+
+Buffer::Buffer() : buffer_(1024), read_pos_(0), write_pos_(0) {
+  bzero(&(*buffer_.begin()), buffer_.size());
+}
 
 void Buffer::RetrieveUntil(const char* end) {
   auto start = Peek();
@@ -10,7 +16,7 @@ void Buffer::RetrieveUntil(const char* end) {
 }
 
 void Buffer::RetrieveAll() {
-  bzero(&buffer_[0], buffer_.size());
+  bzero(&(*buffer_.begin()), buffer_.size());
   read_pos_ = 0;  // 读写指针偏移量归零, buffer was empty
   write_pos_ = 0;  
 }
@@ -22,11 +28,10 @@ std::string Buffer::RetrieveAllToStr() {
 }
 
 void Buffer::EnsureWriteable(size_t len) {
-  auto wb = WriteableBytes();
-  if (wb < len) {
+  if (WriteableBytes() < len) {
     MakeSpace(len);  // 空间不够需要再分配
   }
-  assert(wb >= len);
+  assert(WriteableBytes() >= len);
 }
 
 void Buffer::MakeSpace(size_t len) {

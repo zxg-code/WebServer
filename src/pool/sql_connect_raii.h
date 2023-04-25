@@ -8,10 +8,11 @@
 class SqlConnectionRaii {
  public:
   // Issue: 原版sql似乎是多余的
-  SqlConnectionRaii(SqlConnectionPool* conn_pool) {
+  SqlConnectionRaii(MYSQL** sql, SqlConnectionPool* conn_pool) {
     assert(conn_pool);
     // sql似乎是多余的
-    sql_ = conn_pool->GetConnection();
+    *sql = conn_pool->GetConnection();
+    sql_ = *sql;
     conn_pool_ = conn_pool;
   }
 

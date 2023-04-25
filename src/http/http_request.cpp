@@ -47,7 +47,13 @@ bool HttpRequest::Parse(Buffer* buff) {
       default:
         break;
     }  // switch
-    if (line_end == buff->BeginWrite()) { break; }  // 不用移动读指针吗？
+    if (line_end == buff->BeginWrite()) { 
+      // 当方法体为POST的时候,此时会导致lineEnd已经走完了可读区域，
+      // 提前退出而没有偏移readpos_
+      if (method_ == "POST" && state_ == REQUEST_FINISH) 
+        buff->RetrieveUntil(line_end);
+      break; 
+    }
     buff->RetrieveUntil(line_end + 2);  // 移动读指针，同时跳过CRLF
   }  // while
   LOG_DEBUG("[%s], [%s], [%s]", method_.c_str(), path_.c_str(),
@@ -167,8 +173,10 @@ bool HttpRequest::UserVerify(const string& name, const string& pwd,
                              bool is_login) {
   if (name == "" || pwd == "") { return false; }
   LOG_INFO("Verify name:%s pwd:%s", name.c_str(), pwd.c_str());
-  SqlConnectionRaii sql_pool(SqlConnectionPool::Instance());  // construt sql pool
-  auto sql = sql_pool.get_sql();  // get a sql connection
+  // construt sql pool
+  MYSQL* sql;
+  SqlConnectionRaii sql_pool(&sql, SqlConnectionPool::Instance()); 
+  // auto sql = sql_pool.get_sql();  // get a sql connection
   assert(sql);
   bool flag = false;              // 返回值
   bool username_existed = false;  // 用户名是否已存在

@@ -18,10 +18,10 @@ void HttpConnect::Init(int fd, const sockaddr_in& addr) {
   user_count++;
   addr_ = addr;
   fd_ = fd;
-  iov_cnt_ = 2;  // iov缓冲池数
+  // iov_cnt_ = 2;  // iov缓冲池数
   // 初始化缓冲池读写位置
-  write_buff_->RetrieveAll();
-  read_buff_->RetrieveAll();
+  // write_buff_.RetrieveAll();
+  // read_buff_->RetrieveAll();
   is_close_ = false;
   LOG_INFO("Client[%d](%s:%d) in, userCount:%d", fd_, GetIP(), 
            GetPort(), (int)user_count);
@@ -40,18 +40,18 @@ void HttpConnect::Close() {
 
 bool HttpConnect::Process() {
     request_.Init();
-    if (read_buff_->ReadableBytes() <= 0) return false;  // 是否存在可读数据
-    else if (request_.Parse(read_buff_)) {
+    if (read_buff_.ReadableBytes() <= 0) return false;  // 是否存在可读数据
+    else if (request_.Parse(&read_buff_)) {
       LOG_DEBUG("%s", request_.get_path().c_str());
       response_.Init(src_dir, request_.get_path(), request_.IsKeepAlive(), 200);
     } else {
       response_.Init(src_dir, request_.get_path(), false, 400);
     }
 
-    response_.MakeResponse(write_buff_);  // 组建响应报文放入写缓冲池
+    response_.MakeResponse(&write_buff_);  // 组建响应报文放入写缓冲池
     // 响应头
-    iov_[0].iov_base = const_cast<char*>(write_buff_->Peek());
-    iov_[0].iov_len = write_buff_->ReadableBytes();
+    iov_[0].iov_base = const_cast<char*>(write_buff_.Peek());
+    iov_[0].iov_len = write_buff_.ReadableBytes();
     iov_cnt_ = 1;
 
     // 需要返回服务器资源，则从映射地址上读取
@@ -68,7 +68,7 @@ ssize_t HttpConnect::Read(int* save_errno) {
   ssize_t len = -1;
   // 如果是LT模式，那么只读取一次，如果是ET模式，会一直读取，直到读不出数据
   do {
-    len = read_buff_->ReadFd(fd_, save_errno);
+    len = read_buff_.ReadFd(fd_, save_errno);
     if (len <= 0) break;
   } while (is_ET);
   return len;
@@ -90,7 +90,7 @@ ssize_t HttpConnect::Write(int* save_errno) {
       iov_[1].iov_base = (uint8_t*) iov_[1].iov_base + (len - iov_[0].iov_len);  // 调整开始位置
       iov_[1].iov_len -= (len - iov_[0].iov_len);  // 调整第二块剩余长度
       if (iov_[0].iov_len) {  // 第一块发送完毕，回收空间
-        write_buff_->RetrieveAll();
+        write_buff_.RetrieveAll();
         iov_[0].iov_len = 0;
       }
     }
@@ -98,7 +98,7 @@ ssize_t HttpConnect::Write(int* save_errno) {
       // 第一块还未传输完
       iov_[0].iov_base = (uint8_t*)iov_[0].iov_base + len; 
       iov_[0].iov_len -= len; 
-      write_buff_->Retrieve(len);  // 回收已读空间
+      write_buff_.Retrieve(len);  // 回收已读空间
     }
   } while(is_ET || ToWriteBytes() > 10240);
   return len;

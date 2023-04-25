@@ -57,8 +57,8 @@ private:
   bool is_close_;
   int iov_cnt_;
   struct iovec iov_[2];   
-  Buffer* read_buff_; // 读缓冲区
-  Buffer* write_buff_; // 写缓冲区
+  Buffer read_buff_; // 读缓冲区
+  Buffer write_buff_; // 写缓冲区
   HttpRequest request_;
   HttpResponse response_;
 };

@@ -1,7 +1,6 @@
 <!--
- * @Author       : mark
- * @Date         : 2020-06-30
- * @copyleft GPL 2.0
+ * by zxg
+ * reference: markparticle
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -10,7 +9,7 @@
 
      <meta charset="UTF-8">
 
-     <title>MARK-首页</title>
+     <title>TinyWS</title>
      <link rel="icon" href="images/favicon.ico">
      <link rel="stylesheet" href="css/bootstrap.min.css">
      <link rel="stylesheet" href="css/animate.css">
@@ -19,10 +18,20 @@
 
      <!-- Main css -->
      <link rel="stylesheet" href="css/style.css">
-
+     <style>
+          nav {
+               background-color: #333;
+               padding: 20px;
+               position: fixed;
+               top: 0;
+               left: 0;
+               right: 0;
+               z-index: 999;
+          }
+     </style>
 </head>
 
-<body data-spy="scroll" data-target=".navbar-collapse" data-offset="50">
+<body data-spy="scroll" data-target=".navbar-collapse" data-offset="50" style="background-image:url('../images/idx.jpg');background-size:cover;background-position:center;">
 
      <!-- PRE LOADER -->
      <div class="preloader">
@@ -34,8 +43,7 @@
 
      <!-- NAVIGATION SECTION -->
      <div class="navbar custom-navbar navbar-fixed-top" role="navigation">
-          <div class="container">
-
+          <nav>
                <div class="navbar-header">
                     <button class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                          <span class="icon icon-bar"></span>
@@ -43,19 +51,18 @@
                          <span class="icon icon-bar"></span>
                     </button>
                     <!-- lOGO TEXT HERE -->
-                    <a href="/" class="navbar-brand">Mark</a>
+                    <a href="/" class="navbar-brand"><font size="6px" color="white">ZXG</font></a>
                </div>
                <div class="collapse navbar-collapse">
                     <ul class="nav navbar-nav navbar-right">
-                         <li><a class="smoothScroll" href="/">首页</a></li>
-                         <li><a class="smoothScroll" href="/picture">图片</a></li>
-                         <li><a class="smoothScroll" href="/video">视频</a></li>
-                         <li><a class="smoothScroll" href="/login">登录</a></li>
-                         <li><a class="smoothScroll" href="/register">注册</a></li>
+                         <li><a class="smoothScroll" href="/"><font size="4px" color="white">首页</font></a></li>
+                         <li><a class="smoothScroll" href="/picture"><font size="4px" color="white">图片</font></a></li>
+                         <li><a class="smoothScroll" href="/video"><font size="4px" color="white">视频</font></a></li>
+                         <li><a class="smoothScroll" href="/login"><font size="4px" color="white">登录</font></a></li>
+                         <li><a class="smoothScroll" href="/register"><font size="4px" color="white">注册</font></a></li>
                     </ul>
                </div>
-
-          </div>
+          </nav>
      </div>
      <!-- HOME SECTION -->
      <section id="home">
@@ -63,11 +70,11 @@
                <div class="row">
 
                     <div class="col-md-offset-1 col-md-2 col-sm-3">
-                         <img src="images/profile-image.jpg" class="wow fadeInUp img-responsive img-circle"
+                         <img src="images/cat-facebook-profile-image-208004.jpg" class="wow fadeInUp img-responsive img-circle"
                               data-wow-delay="0.2s" alt="about image">
                     </div>
                     <div class="col-md-8 col-sm-8">
-                         <h1 class="wow fadeInUp" data-wow-delay="0.6s">你好，这是首页。</h1>                    
+                         <h1 class="wow fadeInUp" data-wow-delay="0.6s"><font color="white">Hello, World!</font></h1>                    
                     </div>
                </div>
           </div>

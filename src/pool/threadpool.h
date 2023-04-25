@@ -17,15 +17,15 @@ class Threadpool {
     for (size_t i = 0; i < num_threads; ++i) {
       // 线程处理函数
       auto worker = [pool = pool_]() {
-        std::unique_lock<std::mutex> locker(pool->mtx, std::defer_lock);  // 互斥锁
+        std::unique_lock<std::mutex> locker(pool->mtx);  // 互斥锁
         while (true) {
-          locker.lock();  // 构造时不加锁，现在手动加锁
+          // locker.lock();  // 构造时不加锁，现在手动加锁
           if (!pool->tasks.empty()) {
             auto task = std::move(pool->tasks.front());  // 从请求队列中取出第一个
             pool->tasks.pop();  // 删除被取出的请求
             locker.unlock();
             task();  // 执行请求
-            // locker.lock();
+            locker.lock();
           } else if (pool->is_closed) {  // 线程池要关闭了
             break;
           } else {
@@ -37,7 +37,7 @@ class Threadpool {
       std::thread(worker).detach();  // 将新线程和调用线程分离，调用之后不再是joinable状态了
     }
   }
-  Threadpool() = delete;
+  Threadpool() = default;
   Threadpool(Threadpool&&) = default;  // 移动构造
 
   ~Threadpool() {

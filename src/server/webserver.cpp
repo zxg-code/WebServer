@@ -26,7 +26,7 @@ WebServer::WebServer(int port, int trig_mode, int timeout, bool opt_linger,
   if (!InitSocket()) is_close_ = true;
   // 开启日志
   if (open_log) {
-    Log::Instance()->Init(log_level, "./log", ".log", log_que_size);
+    Log::Instance()->Init(log_level, "./logfiles", ".log", log_que_size);
     if (is_close_) {
       LOG_ERROR("========== Server init error!==========");
     } else {

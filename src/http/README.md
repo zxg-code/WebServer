@@ -7,8 +7,10 @@
     - 修改了ConverHex函数
     - get_path的const重载似乎并无必要，成员变量不是指针，返回的也不是指针或引用
 
+- Fix
+    - Parse函数中第50行，break前需要先移动读偏移量，不然会有一条RequestLine Error记录
+
 - TODO
-    - log功能，已实现
     - 在response实现中，有函数例如AddHeader，多次调用了缓冲池的写入函数，我认为应该组建好字符串之后一次性写入
     - response中，析构函数只调用了UnmapFile()，应该不需要这个函数，有析构函数去做
 
@@ -23,6 +25,7 @@
 #### http_connect
 - Issues
     - 静态成员变量在何时初始化：在webserver.cpp文件中
+    - 缓冲池成员用指针就出错了
 
 - TODO
     - 

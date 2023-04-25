@@ -1,4 +1,4 @@
-// Some wrapper for the epoll system call functions
+// Some wrapper for the epoll system call functions.
 // by zxg
 //
 #ifndef WEBSERVER_SERVER_EPOLLER_H_
@@ -14,7 +14,8 @@
 
 class Epoller {
  public:
-  explicit Epoller(int max_event = 1024);
+  explicit Epoller();  // default max_event: 1024
+  explicit Epoller(int max_event);
   ~Epoller();
 
   // 添加监听事件
@@ -32,7 +33,7 @@ class Epoller {
         
  private:
   int epoll_fd_;  // 指定的内核事件表
-  std::vector<struct epoll_event*> events_;  // 监听的事件 
+  std::vector<struct epoll_event> events_;  // 监听的事件集
 };
 
 #endif  // WEBSERVER_SERVER_EPOLLER_H_

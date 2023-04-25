@@ -3,4 +3,4 @@ all:
 	cd build && make
 
 clean:
-	rm -r bin
+	rm -r -f bin logfiles
